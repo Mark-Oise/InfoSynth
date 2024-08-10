@@ -51,3 +51,6 @@ class ResearchAgent:
         self.agent_executor = AgentExecutor.from_agent_and_tools(
             agent=self.agent, tools=self.tools, verbose=True
         )
+
+    def research(self, topic: str) -> str:
+        return self.agent_executor.run(topic)
