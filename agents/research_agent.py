@@ -1,7 +1,9 @@
 from langchain.agents import Tool, AgentExecutor, LLMSingleActionAgent
 from langchain.prompts import StringPromptTemplate
+from langchain.schema import AgentAction, AgentFinish
 from langchain import OpenAI, LLMChain
 from typing import List, Union
+import re
 
 
 class ResearchAgent:
@@ -71,7 +73,24 @@ class CustomPromptTemplate(StringPromptTemplate):
         kwargs["tool_names"] = ", ".join([tool.name for tool in self.tools])
         return self.template.format(**kwargs)
 
-            
 
+class CustomOutputParser:
+    def parse(self, llm_output: str) -> Union[AgentAction, AgentFinish]:
+        # Check for Final Answer
+        if 'Final Answer:' in llm_output:
+            return AgentFinish(
+                return_values={'output': llm_output.split('Final Answer:')[-1].strip()},
+                log=llm_output
+            )
+        
+        # Parse Action and Action Input
+        action_match = re.search(r'Action:\s*(.*?)(?:\n|$)', llm_output, re.DOTALL)
+        action_input_match = re.search(r'Action Input:\s*(.*?)(?:\n|$)', llm_output, re.DOTALL)
 
+        if not action_match or not action_input_match:
+            raise ValueError(f"Could not parse LLM output: `{llm_output}`")
+        
+        action = action_match.group(1).strip()
+        action_input = action_input_match.group(1).strip()
 
+        return AgentAction(tool=action, tool_input=action_input, log=llm_output)
