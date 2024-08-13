@@ -4,6 +4,7 @@ from langchain.schema import AgentAction, AgentFinish
 from langchain import OpenAI, LLMChain
 from tools.web_search import WebSearchTool
 from tools.wikipedia import WikipediaTool
+from tools.summarize import SummarizeTool
 from typing import List, Union
 import re
 
